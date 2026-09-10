@@ -1,0 +1,42 @@
+---
+# Запускаем и включаем сервис
+
+- name: "Service | Daemon reload (if systemd changed)"
+  systemd_service:
+    daemon_reload: yes
+  become: yes
+  listen: "daemon reload"
+
+# 'listen' это точка, где handler слушает уведомления
+
+- name: "Service | Enable openvox-gui service"
+  systemd_service:
+    name: openvox-gui
+    enabled: yes  # Запускать при загрузке системы
+    state: started
+  become: yes
+  register: service_start
+
+- name: "Service | Wait for service to be ready"
+  uri:
+    url: "http://localhost:{{ openvox_gui_port }}/health"
+    method: GET
+    status_code: 200
+  retries: 5
+  delay: 3
+  until: result is succeeded
+  register: result
+
+# 'uri' модуль делает HTTP запрос
+# 'retries' и 'delay' означают: попробуй 5 раз с интервалом 3 секунды
+# 'until' означает: повторяй, пока не получится
+
+- name: "Service | Check service status"
+  command: systemctl status openvox-gui
+  register: service_status
+  changed_when: false
+  become: yes
+
+- name: "Service | Display service status"
+  debug:
+    msg: "{{ service_status.stdout_lines }}"

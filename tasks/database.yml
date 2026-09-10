@@ -1,0 +1,41 @@
+---
+# Создаём и инициализируем SQLite базу данных
+
+- name: "Database | Check if database exists"
+  stat:
+    path: "{{ openvox_gui_data_dir }}/openvox.db"
+  register: db_file
+
+- name: "Database | Initialize database"
+  command:
+    cmd: |
+      {{ openvox_gui_venv_path }}/bin/python -c "
+      import sys
+      sys.path.insert(0, '{{ openvox_gui_home }}/backend')
+      from app.database import init_db
+      import asyncio
+      asyncio.run(init_db())
+      print('Database initialized successfully')
+      "
+    chdir: "{{ openvox_gui_home }}"
+  become: yes
+  become_user: "{{ openvox_gui_user }}"
+  when: not db_file.stat.exists
+  register: db_init
+
+# 'stat' модуль проверяет, существует ли файл
+# 'when: not db_file.stat.exists' означает: выполнить только если БД не существует
+
+- name: "Database | Display initialization result"
+  debug:
+    msg: "{{ db_init.stdout }}"
+  when: db_init.stdout is defined
+
+- name: "Database | Set database directory permissions"
+  file:
+    path: "{{ openvox_gui_data_dir }}"
+    owner: "{{ openvox_gui_user }}"
+    group: "{{ openvox_gui_group }}"
+    mode: "0700"  # Только владелец может читать/писать (БД конфиденциальна!)
+    recurse: yes
+  become: yes

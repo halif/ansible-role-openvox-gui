@@ -1,0 +1,32 @@
+---
+- name: "OpenVox GUI | Display role info"
+  debug:
+    msg: |
+      Installing OpenVox GUI
+      Version: {{ openvox_gui_version }}
+      Host: {{ openvox_gui_host }}:{{ openvox_gui_port }}
+      User: {{ openvox_gui_user }}
+      Database: {{ openvox_gui_database_url }}
+
+- name: "Include system tasks"
+  include_tasks: system.yml
+
+- name: "Include install tasks"
+  include_tasks: install.yml
+
+- name: "Include configure tasks"
+  include_tasks: configure.yml
+
+- name: "Include database tasks"
+  include_tasks: database.yml
+
+- name: "Include service tasks"
+  include_tasks: service.yml
+
+- name: "Display summary"
+  debug:
+    msg: |
+      ✓ OpenVox GUI installed successfully!
+      URL: https://{{ inventory_hostname }}:{{ openvox_gui_port }}
+      Default user: admin
+      Check credentials: cat {{ openvox_gui_home }}/config/.credentials

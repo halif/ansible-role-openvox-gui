@@ -1,0 +1,86 @@
+---
+# Создаём конфигурационные файлы из шаблонов
+
+- name: "Configure | Create .env config from template"
+  template:
+    src: config.env.j2
+    dest: "{{ openvox_gui_home }}/config/.env"
+    owner: "{{ openvox_gui_user }}"
+    group: "{{ openvox_gui_group }}"
+    mode: "0600"  # Только владелец может читать (это конфиденциальные данные!)
+  become: yes
+  notify: "restart openvox-gui"
+
+# 'template' копирует файл, заменяя {{ переменные }} на значения
+# 'notify' говорит: "когда эта задача закончится, выполни handler"
+# Handler 'restart openvox-gui' перезагрузит сервис
+
+- name: "Configure | Generate SECRET_KEY if not exists"
+  block:
+    - name: "Configure | Check if SECRET_KEY exists in .env"
+      shell: grep -q "OPENVOX_GUI_SECRET_KEY" {{ openvox_gui_home }}/config/.env
+      register: secret_key_exists
+      changed_when: false
+      failed_when: false
+
+    - name: "Configure | Generate random SECRET_KEY"
+      shell: |
+        python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+      register: generated_secret
+      when: secret_key_exists.rc != 0
+
+    - name: "Configure | Add SECRET_KEY to .env"
+      lineinfile:
+        path: "{{ openvox_gui_home }}/config/.env"
+        line: "OPENVOX_GUI_SECRET_KEY={{ generated_secret.stdout }}"
+        state: present
+      when: generated_secret.stdout is defined
+      become: yes
+  rescue:
+    - name: "Configure | Warn about SECRET_KEY"
+      debug:
+        msg: "Warning: Could not generate SECRET_KEY. Please set OPENVOX_GUI_SECRET_KEY manually."
+
+# 'block' группирует задачи
+# 'rescue' ловит ошибки и выполняет план Б
+# Это как try/except в программировании
+
+- name: "Configure | Create nginx config from template"
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/openvox-gui
+    owner: root
+    group: root
+    mode: "0644"
+  become: yes
+  notify: "reload nginx"
+
+- name: "Configure | Enable nginx site (symlink)"
+  file:
+    src: /etc/nginx/sites-available/openvox-gui
+    dest: /etc/nginx/sites-enabled/openvox-gui
+    state: link
+  become: yes
+  notify: "reload nginx"
+
+# Symlink это как ярлык в Windows
+# sites-enabled содержит ссылки на сайты, которые nginx должен включить
+
+- name: "Configure | Validate nginx config"
+  command: nginx -t
+  become: yes
+  changed_when: false
+
+- name: "Configure | Create systemd service from template"
+  template:
+    src: openvox-gui.service.j2
+    dest: /etc/systemd/system/openvox-gui.service
+    owner: root
+    group: root
+    mode: "0644"
+  become: yes
+  notify:
+    - "daemon reload"
+    - "restart openvox-gui"
+
+# systemd юнит файл — это как скрипт запуска для Linux сервисов

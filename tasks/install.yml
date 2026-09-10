@@ -1,0 +1,64 @@
+---
+# Скачиваем репозиторий и устанавливаем зависимости Python
+
+- name: "Install | Clone OpenVox GUI repository"
+  git:
+    repo: "https://github.com/cvquesty/openvox-gui.git"
+    dest: "{{ openvox_gui_home }}"
+    version: "{{ openvox_gui_version }}"
+    update: yes
+    force: yes  # Перезаписать локальные изменения
+  become: yes
+  become_user: "{{ openvox_gui_user }}"
+  register: git_clone
+
+# 'git' модуль клонирует репозиторий
+# 'register' сохранит информацию о том, изменился ли репо
+
+- name: "Install | Display git clone info"
+  debug:
+    msg: "Repository cloned: {{ git_clone.changed }}"
+
+- name: "Install | Create Python virtual environment"
+  command:
+    cmd: python3 -m venv {{ openvox_gui_venv_path }}
+    creates: "{{ openvox_gui_venv_path }}/bin/activate"
+  become: yes
+  become_user: "{{ openvox_gui_user }}"
+
+# 'creates' означает: не выполнять, если файл уже существует
+# Это идемпотентность: вторая попытка не создаст новый venv
+
+- name: "Install | Upgrade pip in venv"
+  pip:
+    name: pip
+    state: latest
+    virtualenv: "{{ openvox_gui_venv_path }}"
+  become: yes
+  become_user: "{{ openvox_gui_user }}"
+
+- name: "Install | Install Python dependencies"
+  pip:
+    requirements: "{{ openvox_gui_home }}/backend/requirements.txt"
+    virtualenv: "{{ openvox_gui_venv_path }}"
+    state: present
+  become: yes
+  become_user: "{{ openvox_gui_user }}"
+  register: pip_install
+
+# 'virtualenv' указывает Python venv для установки пакетов
+# Все пакеты установятся только в этот venv, не затрагивая систему
+
+- name: "Install | Display pip install result"
+  debug:
+    msg: "Dependencies installed. Changed: {{ pip_install.changed }}"
+
+- name: "Install | Verify installation"
+  command:
+    cmd: "{{ openvox_gui_venv_path }}/bin/python -c 'import fastapi; print(fastapi.__version__)'"
+  register: fastapi_version
+  changed_when: false
+
+- name: "Install | Display FastAPI version"
+  debug:
+    msg: "FastAPI version: {{ fastapi_version.stdout }}"

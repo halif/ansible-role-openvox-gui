@@ -1,0 +1,118 @@
+---
+# Проверяем ОС и устанавливаем системные пакеты
+
+- name: "System | Validate supported OS"
+  assert:
+    that:
+      - ansible_os_family in ['RedHat', 'Debian']
+    fail_msg: "Only RedHat and Debian based systems are supported"
+
+# Команда 'assert' проверяет условие. Если неправда — fails.
+# Это защита: мы НЕ запустимся на Windows или Arch Linux
+
+- name: "System | Get Python version"
+  command: python3 --version
+  register: python_version
+  changed_when: false  # Эта команда не меняет состояние, только информирует
+
+# 'register' сохраняет вывод команды в переменную
+# 'changed_when: false' говорит: "это не изменило систему"
+
+- name: "System | Validate Python version"
+  assert:
+    that:
+      - python_version.stdout is version('3.10', '>=')
+    fail_msg: "Python 3.10+ is required"
+
+- name: "System | Update package cache (Debian)"
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == 'Debian'
+  become: yes
+
+# 'when' условие: эта задача запустится только на Debian
+# 'become: yes' означает: выполни с sudo
+# 'cache_valid_time' означает: не обновляй кэш, если он моложе 1 часа
+
+- name: "System | Update package cache (RedHat)"
+  dnf:
+    update_cache: yes
+  when: ansible_os_family == 'RedHat'
+  become: yes
+
+- name: "System | Install required packages (Debian)"
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python3-pip
+    - python3-venv
+    - python3-dev
+    - git
+    - curl
+    - wget
+    - ssl-cert
+    - nginx
+    - systemd
+  when: ansible_os_family == 'Debian'
+  become: yes
+
+# 'loop' повторяет задачу для каждого пакета
+# 'state: present' означает: пакет должен быть установлен
+
+- name: "System | Install required packages (RedHat)"
+  dnf:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python3-pip
+    - python3-devel
+    - git
+    - curl
+    - wget
+    - nginx
+    - systemd
+  when: ansible_os_family == 'RedHat'
+  become: yes
+
+- name: "System | Upgrade pip"
+  pip:
+    name: pip
+    state: latest
+    extra_args: --user
+  become: yes
+  become_user: "{{ openvox_gui_user }}"
+
+# 'become_user' означает: выполни от конкретного пользователя (не root)
+
+- name: "System | Create openvox-gui user"
+  user:
+    name: "{{ openvox_gui_user }}"
+    shell: /bin/bash
+    home: "{{ openvox_gui_home }}"
+    createhome: yes
+    groups: "{{ openvox_gui_group }}"
+    state: present
+  become: yes
+
+# Создаём пользователя, от которого будет работать сервис
+# Это SECURITY BEST PRACTICE: сервис не должен работать от root
+
+- name: "System | Create required directories"
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ openvox_gui_user }}"
+    group: "{{ openvox_gui_group }}"
+    mode: "0755"
+  loop:
+    - "{{ openvox_gui_home }}"
+    - "{{ openvox_gui_data_dir }}"
+    - "{{ openvox_gui_log_dir }}"
+    - "{{ openvox_gui_home }}/config"
+  become: yes
+
+# 'file' модуль управляет файлами/директориями
+# 'state: directory' означает: директория должна существовать
+# 'owner, group, mode' устанавливают права доступа

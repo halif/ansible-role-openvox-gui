@@ -1,0 +1,31 @@
+---
+openvox_gui_version: "main"  # Ветка/тег из GitHub (main, 3.12.0, etc)
+
+openvox_gui_host: "0.0.0.0"           # На каком IP слушать (0.0.0.0 = все интерфейсы)
+openvox_gui_port: 4567                # На каком порту слушать
+openvox_gui_enable_ssl: true          # Использовать HTTPS?
+
+openvox_gui_puppetdb_host: "127.0.0.1"      # Хост PuppetDB
+openvox_gui_puppetdb_port: 8081             # Порт PuppetDB
+openvox_gui_puppet_server_host: "127.0.0.1" # Хост PuppetServer
+openvox_gui_puppet_server_port: 8140        # Порт PuppetServer
+
+openvox_gui_auth_backend: "local"  # Как аутентифицировать: local, ldap, none
+openvox_gui_ldap_server: ""        # LDAP сервер (заполнить если auth_backend=ldap)
+openvox_gui_ldap_base_dn: ""       # LDAP base DN (например: dc=example,dc=com)
+
+openvox_gui_database_url: "sqlite:///opt/openvox-gui/data/openvox.db"
+
+openvox_gui_user: "puppet"                        # Юзер, от которого запускать сервис
+openvox_gui_group: "puppet"                       # Группа
+openvox_gui_home: "/opt/openvox-gui"              # Где установить
+openvox_gui_venv_path: "/opt/openvox-gui/venv"    # Где виртуальное окружение Python
+openvox_gui_data_dir: "/opt/openvox-gui/data"     # Где хранить данные
+openvox_gui_log_dir: "/var/log/openvox-gui"       # Где логи
+
+openvox_gui_ssl_cert_path: "/etc/ssl/certs/openvox-gui.crt"
+openvox_gui_ssl_key_path: "/etc/ssl/private/openvox-gui.key"
+
+openvox_gui_python_version: "3.10"    # Какая версия Python нужна
+openvox_gui_debug: false              # Debug режим (ОПАСНО в production!)
+openvox_gui_workers: 4                # Сколько uvicorn воркеров запустить
