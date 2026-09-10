@@ -1,0 +1,20 @@
+---
+# Converge = применение роли к контейнеру
+# Molecule выполнит эту playbook внутри контейнера
+
+- name: Converge
+  hosts: all
+  become: true  # Все задачи от root
+
+  # Применяем нашу роль
+  roles:
+    - role: openvox_gui
+      # Переменные для тестирования (можно переопределить для разных тестов)
+      vars:
+        openvox_gui_version: "main"
+        openvox_gui_puppetdb_host: "puppetdb.test.local"
+        openvox_gui_puppet_server_host: "puppet.test.local"
+        openvox_gui_auth_backend: "local"
+        openvox_gui_debug: true  # Debug режим для тестов
+
+# После этого playbook molecule проверит, что ничего не сломалось

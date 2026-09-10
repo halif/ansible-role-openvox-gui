@@ -1,0 +1,17 @@
+---
+- name: "restart openvox-gui"
+  systemd_service:
+    name: openvox-gui
+    state: restarted
+  become: yes
+
+- name: "reload nginx"
+  systemd_service:
+    name: nginx
+    state: reloaded
+  become: yes
+
+- name: "daemon reload"
+  systemd_service:
+    daemon_reload: yes
+  become: yes
