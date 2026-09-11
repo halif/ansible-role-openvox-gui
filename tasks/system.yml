@@ -1,5 +1,5 @@
 ---
-# Проверяем ОС и устанавливаем системные пакеты
+# System preparation and dependency installation
 
 - name: "System | Validate supported OS"
   assert:
@@ -7,16 +7,10 @@
       - ansible_os_family in ['RedHat', 'Debian']
     fail_msg: "Only RedHat and Debian based systems are supported"
 
-# Команда 'assert' проверяет условие. Если неправда — fails.
-# Это защита: мы НЕ запустимся на Windows или Arch Linux
-
 - name: "System | Get Python version"
   command: python3 --version
   register: python_version
-  changed_when: false  # Эта команда не меняет состояние, только информирует
-
-# 'register' сохраняет вывод команды в переменную
-# 'changed_when: false' говорит: "это не изменило систему"
+  changed_when: false
 
 - name: "System | Validate Python version"
   assert:
@@ -26,20 +20,16 @@
 
 - name: "System | Update package cache (Debian)"
   apt:
-    update_cache: yes
+    update_cache: true
     cache_valid_time: 3600
   when: ansible_os_family == 'Debian'
-  become: yes
-
-# 'when' условие: эта задача запустится только на Debian
-# 'become: yes' означает: выполни с sudo
-# 'cache_valid_time' означает: не обновляй кэш, если он моложе 1 часа
+  become: true
 
 - name: "System | Update package cache (RedHat)"
   dnf:
-    update_cache: yes
+    update_cache: true
   when: ansible_os_family == 'RedHat'
-  become: yes
+  become: true
 
 - name: "System | Install required packages (Debian)"
   apt:
@@ -56,10 +46,7 @@
     - nginx
     - systemd
   when: ansible_os_family == 'Debian'
-  become: yes
-
-# 'loop' повторяет задачу для каждого пакета
-# 'state: present' означает: пакет должен быть установлен
+  become: true
 
 - name: "System | Install required packages (RedHat)"
   dnf:
@@ -74,30 +61,25 @@
     - nginx
     - systemd
   when: ansible_os_family == 'RedHat'
-  become: yes
+  become: true
 
 - name: "System | Upgrade pip"
   pip:
     name: pip
-    state: latest
-    extra_args: --user
-  become: yes
+    state: present
+    extra_args: --upgrade --user
+  become: true
   become_user: "{{ openvox_gui_user }}"
-
-# 'become_user' означает: выполни от конкретного пользователя (не root)
 
 - name: "System | Create openvox-gui user"
   user:
     name: "{{ openvox_gui_user }}"
     shell: /bin/bash
     home: "{{ openvox_gui_home }}"
-    createhome: yes
+    createhome: true
     groups: "{{ openvox_gui_group }}"
     state: present
-  become: yes
-
-# Создаём пользователя, от которого будет работать сервис
-# Это SECURITY BEST PRACTICE: сервис не должен работать от root
+  become: true
 
 - name: "System | Create required directories"
   file:
@@ -111,4 +93,4 @@
     - "{{ openvox_gui_data_dir }}"
     - "{{ openvox_gui_log_dir }}"
     - "{{ openvox_gui_home }}/config"
-  become: yes
+  become: true

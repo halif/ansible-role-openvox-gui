@@ -1,4 +1,5 @@
 ---
+# Configuration files from templates
 
 - name: "Configure | Create .env config from template"
   template:
@@ -6,9 +7,9 @@
     dest: "{{ openvox_gui_home }}/config/.env"
     owner: "{{ openvox_gui_user }}"
     group: "{{ openvox_gui_group }}"
-    mode: "0600"  # Конфиденциально!
-    backup: yes   # Сохранить backup старого файла
-  become: yes
+    mode: "0600"
+    backup: true
+  become: true
   notify: "restart openvox-gui"
 
 - name: "Configure | Create systemd service from template"
@@ -18,7 +19,7 @@
     owner: root
     group: root
     mode: "0644"
-  become: yes
+  become: true
   notify:
     - "daemon reload"
     - "restart openvox-gui"
@@ -30,8 +31,8 @@
     owner: root
     group: root
     mode: "0644"
-    backup: yes
-  become: yes
+    backup: true
+  become: true
   notify: "validate and reload nginx"
 
 - name: "Configure | Enable nginx site (symlink)"
@@ -39,15 +40,15 @@
     src: /etc/nginx/sites-available/openvox-gui
     dest: /etc/nginx/sites-enabled/openvox-gui
     state: link
-    force: yes
-  become: yes
+    force: true
+  become: true
   notify: "validate and reload nginx"
 
 - name: "Configure | Remove default nginx site"
   file:
     path: /etc/nginx/sites-enabled/default
     state: absent
-  become: yes
+  become: true
   notify: "validate and reload nginx"
 
 - name: "Configure | Create preferences.json"
@@ -57,14 +58,4 @@
     owner: "{{ openvox_gui_user }}"
     group: "{{ openvox_gui_group }}"
     mode: "0644"
-  become: yes
-
-- name: "Configure | Validate nginx config"
-  command: nginx -t
-  become: yes
-  changed_when: false
-  register: nginx_test
-
-- name: "Configure | Display nginx validation result"
-  debug:
-    msg: "{{ nginx_test.stderr }}"
+  become: true

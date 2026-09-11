@@ -1,35 +1,35 @@
-# roles/openvox_gui/handlers/main.yml
 ---
+# Handlers - deferred actions
 
 - name: "restart openvox-gui"
   systemd_service:
     name: openvox-gui
     state: restarted
-  become: yes
+  become: true
   listen: "restart openvox-gui"
 
 - name: "reload nginx"
   systemd_service:
     name: nginx
     state: reloaded
-  become: yes
+  become: true
   listen: "reload nginx"
 
 - name: "daemon reload"
   systemd_service:
-    daemon_reload: yes
-  become: yes
+    daemon_reload: true
+  become: true
   listen: "daemon reload"
 
 - name: "validate and reload nginx"
   block:
-    - name: Validate nginx
+    - name: Validate nginx config
       command: nginx -t
-      become: yes
-
+      become: true
+    
     - name: Reload nginx
       systemd_service:
         name: nginx
         state: reloaded
-      become: yes
+      become: true
   listen: "validate and reload nginx"

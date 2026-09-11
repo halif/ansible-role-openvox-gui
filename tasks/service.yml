@@ -1,20 +1,12 @@
 ---
-# Запускаем и включаем сервис
-
-- name: "Service | Daemon reload (if systemd changed)"
-  systemd_service:
-    daemon_reload: yes
-  become: yes
-  listen: "daemon reload"
-
-# 'listen' это точка, где handler слушает уведомления
+# Systemd service management
 
 - name: "Service | Enable openvox-gui service"
   systemd_service:
     name: openvox-gui
-    enabled: yes  # Запускать при загрузке системы
+    enabled: true
     state: started
-  become: yes
+  become: true
   register: service_start
 
 - name: "Service | Wait for service to be ready"
@@ -27,15 +19,11 @@
   until: result is succeeded
   register: result
 
-# 'uri' модуль делает HTTP запрос
-# 'retries' и 'delay' означают: попробуй 5 раз с интервалом 3 секунды
-# 'until' означает: повторяй, пока не получится
-
 - name: "Service | Check service status"
   command: systemctl status openvox-gui
   register: service_status
   changed_when: false
-  become: yes
+  become: true
 
 - name: "Service | Display service status"
   debug:

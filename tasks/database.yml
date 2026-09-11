@@ -1,5 +1,5 @@
 ---
-# Создаём и инициализируем SQLite базу данных
+# Database initialization
 
 - name: "Database | Check if database exists"
   stat:
@@ -18,13 +18,10 @@
       print('Database initialized successfully')
       "
     chdir: "{{ openvox_gui_home }}"
-  become: yes
+  become: true
   become_user: "{{ openvox_gui_user }}"
   when: not db_file.stat.exists
   register: db_init
-
-# 'stat' модуль проверяет, существует ли файл
-# 'when: not db_file.stat.exists' означает: выполнить только если БД не существует
 
 - name: "Database | Display initialization result"
   debug:
@@ -36,6 +33,6 @@
     path: "{{ openvox_gui_data_dir }}"
     owner: "{{ openvox_gui_user }}"
     group: "{{ openvox_gui_group }}"
-    mode: "0700"  # Только владелец может читать/писать (БД конфиденциальна!)
-    recurse: yes
-  become: yes
+    mode: "0700"
+    recurse: true
+  become: true
