@@ -8,5 +8,3 @@ skip_list:
 
 warn_list:
   - undefined-variable  # Предупреждай, но не фейлай
-
-# Это помогает ловить ошибки, которые hard найти в runtime
