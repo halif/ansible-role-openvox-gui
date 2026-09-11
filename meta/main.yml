@@ -1,47 +1,40 @@
-# roles/openvox_gui/meta/main.yml
 ---
-namespace: halif
-name: openvox_gui
-version: 1.0.0
-readme: README.md
-authors:
-  - Halif
+galaxy_info:
+  namespace: halif
+  name: openvox_gui
+  author: Halif
+  description: Ansible role for installing and configuring OpenVox GUI on Puppet infrastructure
+  license: Apache-2.0
+  min_ansible_version: "2.15"
 
-description: Ansible role for installing and configuring OpenVox GUI on Puppet infrastructure
+  platforms:
+    - name: Ubuntu
+      versions:
+        - "20.04"
+        - "22.04"
+        - "24.04"
 
-license:
-  - Apache-2.0
+    - name: Debian
+      versions:
+        - "11"
+        - "12"
 
-min_ansible_version: "2.15"
+    - name: EL
+      versions:
+        - "8"
+        - "9"
 
-platforms:
-  - name: Ubuntu
-    versions:
-      - "20.04"
-      - "22.04"
-      - "24.04"
-
-  - name: Debian
-    versions:
-      - "11"
-      - "12"
-
-  - name: EL
-    versions:
-      - "8"
-      - "9"
-
-galaxy_tags:
-  - puppet
-  - openvox
-  - gui
-  - management
-  - infrastructure
-  - monitoring
-  - dashboard
-  - orchestration
-  - devops
-  - system-administration
+  galaxy_tags:
+    - puppet
+    - openvox
+    - gui
+    - management
+    - infrastructure
+    - monitoring
+    - dashboard
+    - orchestration
+    - devops
+    - system-administration
 
 dependencies: []
 
