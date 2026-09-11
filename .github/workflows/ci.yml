@@ -1,0 +1,82 @@
+---
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+# Этот workflow запускается:
+# - При push в main/master/develop
+# - При открытии/обновлении Pull Request
+# - Автоматически тестирует код ДО слияния
+
+jobs:
+  # ==================== ШАГ 1: LINT (проверка синтаксиса) ====================
+  lint:
+    runs-on: ubuntu-latest  # Запускаем на Ubuntu VM (бесплатно для публичных репо)
+    name: Lint
+
+    steps:
+      # Шаг 1.1: Скачиваем код
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Нужен полный история для некоторых проверок
+
+      # Шаг 1.2: Устанавливаем Python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Шаг 1.3: Устанавливаем инструменты для проверки
+      - name: Install lint tools
+        run: pip install ansible-lint yamllint
+
+      # Шаг 1.4: Проверяем YAML синтаксис
+      - name: Lint YAML files (yamllint)
+        run: yamllint -c .config/yamllint.yml .
+        # yamllint читает конфиг из .config/yamllint.yml
+
+      # Шаг 1.5: Проверяем Ansible синтаксис и best practices
+      - name: Lint Ansible code (ansible-lint)
+        run: ansible-lint
+        # ansible-lint читает конфиг из .config/ansible-lint.yml
+
+  # ==================== ШАГ 2: MOLECULE (интеграционные тесты) ====================
+  molecule:
+    needs: lint  # Этот job зависит от lint: запустится только если lint ✓
+    runs-on: ubuntu-latest
+    name: Molecule Test
+
+    strategy:
+      # Matrix позволяет запустить тесты на разных версиях
+      matrix:
+        python-version: ["3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Установить нужную версию Python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Установить зависимости для Molecule
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install ansible "molecule[docker]" docker
+          pip install -r requirements-dev.txt
+        # requirements-dev.txt содержит дополнительные зависимости для разработки
+
+      # Запустить molecule тесты
+      - name: Run molecule test
+        run: molecule test
+        # molecule test сам выполнит:
+        # 1. destroy (удалить старые контейнеры)
+        # 2. create (создать новые контейнеры)
+        # 3. converge (применить роль)
+        # 4. idempotence (применить ещё раз — должно быть без изменений)
+        # 5. verify (проверить результат)
+        # 6. destroy (удалить контейнеры)

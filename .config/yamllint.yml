@@ -1,0 +1,16 @@
+---
+# YAMLLint конфигурация
+# Проверяет синтаксис и стиль YAML файлов
+
+extends: default
+
+rules:
+  line-length: disable  # Не проверяй длину строк (иногда нужны длинные)
+  truthy:
+    allowed-values: ['true', 'false']  # Используй true/false, не yes/no
+    check-keys: false  # Но в ключах это не проверяй
+  indentation:
+    spaces: 2  # Используй 2 пробела для отступов (стандарт в Ansible)
+  comments:
+    min-spaces-from-content: 2  # 2 пробела перед комментарием
+    require-starting-space: true  # # Comment (с пробелом)
