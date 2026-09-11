@@ -112,7 +112,3 @@
     - "{{ openvox_gui_log_dir }}"
     - "{{ openvox_gui_home }}/config"
   become: yes
-
-# 'file' модуль управляет файлами/директориями
-# 'state: directory' означает: директория должна существовать
-# 'owner, group, mode' устанавливают права доступа
