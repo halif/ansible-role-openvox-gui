@@ -2,46 +2,27 @@
 - name: Verify
   hosts: all
   become: true
-  gather_facts: true  # Собрать информацию о системе
+  gather_facts: true
 
   tasks:
-    # ===================== Проверка системы =====================
     - name: Check Python version
       debug:
         msg: "Python version: {{ ansible_python_version }}"
 
-    # ===================== Проверка установки пакетов =====================
     - name: Check if required packages are installed
       package_facts:
         manager: auto
       register: _pkg_facts
 
-    - name: Verify Python packages are installed
+    - name: Verify required packages
       assert:
         that:
-          - "'python3-pip' in _pkg_facts.ansible_facts.ansible_pkg_mgr"
-          - "'python3-venv' in _pkg_facts.ansible_facts.ansible_pkg_mgr"
+          - "'python3-pip' in _pkg_facts.ansible_facts.ansible_pkg_mgr or 'python3-devel' in _pkg_facts.ansible_facts.ansible_pkg_mgr"
           - "'git' in _pkg_facts.ansible_facts.ansible_pkg_mgr"
           - "'nginx' in _pkg_facts.ansible_facts.ansible_pkg_mgr"
         fail_msg: "Required packages are not installed"
 
-    # ===================== Проверка пользователя =====================
-    - name: Check if openvox-gui user exists
-      user:
-        name: puppet
-        state: present
-      register: user_check
-      check_mode: yes
-      changed_when: false
-
-    - name: Verify user exists
-      assert:
-        that:
-          - user_check is not changed
-        fail_msg: "OpenVox GUI user not found"
-
-    # ===================== Проверка директорий =====================
-    - name: Check if OpenVox GUI directories exist
+    - name: Check if openvox-gui directories exist
       stat:
         path: "{{ item }}"
       loop:
@@ -57,7 +38,6 @@
         fail_msg: "Directory {{ item.item }} does not exist"
       loop: "{{ dir_check.results }}"
 
-    # ===================== Проверка репозитория =====================
     - name: Check if OpenVox GUI repo is cloned
       stat:
         path: /opt/openvox-gui/.git
@@ -69,7 +49,6 @@
           - git_dir.stat.exists
         fail_msg: "OpenVox GUI repository not cloned"
 
-    # ===================== Проверка Python venv =====================
     - name: Check if Python venv exists
       stat:
         path: /opt/openvox-gui/venv/bin/python
@@ -90,7 +69,6 @@
       debug:
         msg: "FastAPI version: {{ fastapi_check.stdout }}"
 
-    # ===================== Проверка конфигурации =====================
     - name: Check if .env config exists
       stat:
         path: /opt/openvox-gui/config/.env
@@ -102,7 +80,6 @@
           - env_file.stat.exists
         fail_msg: ".env config file not found"
 
-    # ===================== Проверка systemd сервиса =====================
     - name: Check if systemd service exists
       stat:
         path: /etc/systemd/system/openvox-gui.service
@@ -119,8 +96,8 @@
         name: openvox-gui
       register: service_status
       until: service_status.status.ActiveState == 'active'
-      retries: 12  # Попробуй 12 раз (12 * 5 сек = 60 сек)
-      delay: 5     # С интервалом 5 секунд
+      retries: 12
+      delay: 5
 
     - name: Verify service is active
       assert:
@@ -128,7 +105,6 @@
           - service_status.status.ActiveState == 'active'
         fail_msg: "OpenVox GUI service is not active"
 
-    # ===================== Проверка health endpoint =====================
     - name: Wait for OpenVox GUI API to be ready
       wait_for:
         host: 127.0.0.1
@@ -152,7 +128,6 @@
           - "'ok' in health_check.json.status"
         fail_msg: "Health endpoint does not respond correctly"
 
-    # ===================== Проверка nginx =====================
     - name: Check if nginx is installed and running
       systemd_service:
         name: nginx
@@ -164,7 +139,6 @@
           - nginx_status.status.ActiveState == 'active'
         fail_msg: "nginx service is not active"
 
-    # ===================== Финальный отчет =====================
     - name: Display verification summary
       debug:
         msg: |

@@ -7,24 +7,24 @@ galaxy_info:
   license:
     - Apache-2.0
   min_ansible_version: "2.15"
-  
+
   platforms:
     - name: Ubuntu
       versions:
         - "20.04"
         - "22.04"
         - "24.04"
-    
+
     - name: Debian
       versions:
         - "11"
         - "12"
-    
+
     - name: EL
       versions:
         - "8"
         - "9"
-  
+
   galaxy_tags:
     - puppet
     - openvox
