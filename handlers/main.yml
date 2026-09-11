@@ -1,17 +1,35 @@
+# roles/openvox_gui/handlers/main.yml
 ---
+
 - name: "restart openvox-gui"
   systemd_service:
     name: openvox-gui
     state: restarted
   become: yes
+  listen: "restart openvox-gui"
 
 - name: "reload nginx"
   systemd_service:
     name: nginx
     state: reloaded
   become: yes
+  listen: "reload nginx"
 
 - name: "daemon reload"
   systemd_service:
     daemon_reload: yes
   become: yes
+  listen: "daemon reload"
+
+- name: "validate and reload nginx"
+  block:
+    - name: Validate nginx
+      command: nginx -t
+      become: yes
+
+    - name: Reload nginx
+      systemd_service:
+        name: nginx
+        state: reloaded
+      become: yes
+  listen: "validate and reload nginx"

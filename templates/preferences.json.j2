@@ -1,0 +1,21 @@
+# roles/openvox_gui/templates/preferences.json.j2
+{
+  "theme": "casual",
+  "auto_refresh": false,
+  "auto_refresh_interval": 30,
+  "rows_per_page": 50,
+  "default_view": "dashboard",
+  "timezone": "UTC",
+  "date_format": "YYYY-MM-DD",
+  "time_format": "24h",
+  "language": "en_US",
+  "log_level": "INFO",
+  "notifications_enabled": true,
+  "show_tooltips": true,
+  "compact_mode": false,
+  "default_cluster_topology": {
+    "console_vip_host": "{{ openvox_gui_console_vip_host | default('') }}",
+    "console_vip_port": {{ openvox_gui_console_vip_port | default(4567) }},
+    "shared_db_url": "{{ openvox_gui_database_url }}"
+  }
+}
