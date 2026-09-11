@@ -16,4 +16,3 @@
         openvox_gui_puppet_server_host: "puppet.test.local"
         openvox_gui_auth_backend: "local"
         openvox_gui_debug: true  # Debug режим для тестов
-
