@@ -2,26 +2,27 @@
 # Handlers - deferred actions
 
 - name: "restart openvox-gui"
+  listen: "restart openvox-gui"
   systemd_service:
     name: openvox-gui
     state: restarted
   become: true
-  listen: "restart openvox-gui"
 
 - name: "reload nginx"
+  listen: "reload nginx"
   systemd_service:
     name: nginx
     state: reloaded
   become: true
-  listen: "reload nginx"
 
 - name: "daemon reload"
+  listen: "daemon reload"
   systemd_service:
     daemon_reload: true
   become: true
-  listen: "daemon reload"
 
 - name: "validate and reload nginx"
+  listen: "validate and reload nginx"
   block:
     - name: Validate nginx config
       command: nginx -t
@@ -32,4 +33,3 @@
         name: nginx
         state: reloaded
       become: true
-  listen: "validate and reload nginx"

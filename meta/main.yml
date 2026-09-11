@@ -35,6 +35,6 @@ galaxy_info:
     - dashboard
     - orchestration
     - devops
-    - system-administration
+    - system_administration
 
 dependencies: []
