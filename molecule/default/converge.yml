@@ -17,4 +17,3 @@
         openvox_gui_auth_backend: "local"
         openvox_gui_debug: true  # Debug режим для тестов
 
-# После этого playbook molecule проверит, что ничего не сломалось
