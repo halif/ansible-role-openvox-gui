@@ -1,31 +1,58 @@
 ---
-openvox_gui_version: "main"  # Ветка/тег из GitHub (main, 3.12.0, etc)
+# Пинуем на последний официально тегированный стабильный релиз, а не
+# на ветку main (там разработческий поток между релизами).
+openvox_gui_version: "v3.12.0"
+openvox_gui_repo_url: "https://github.com/cvquesty/openvox-gui.git"
 
-openvox_gui_host: "0.0.0.0"           # На каком IP слушать (0.0.0.0 = все интерфейсы)
-openvox_gui_port: 4567                # На каком порту слушать
-openvox_gui_enable_ssl: true          # Использовать HTTPS?
+# Отдельно: staging-директория для git-клона/сборки (install.conf,
+# install.sh) и install_dir — куда сам установщик реально разворачивает
+# приложение (venv, systemd-юнит, БД). Это разные пути по замыслу
+# самого проекта.
+openvox_gui_source_dir: "/opt/openvox-gui-src"
+openvox_gui_install_dir: "/opt/openvox-gui"
 
-openvox_gui_puppetdb_host: "127.0.0.1"      # Хост PuppetDB
-openvox_gui_puppetdb_port: 8081             # Порт PuppetDB
-openvox_gui_puppet_server_host: "127.0.0.1" # Хост PuppetServer
-openvox_gui_puppet_server_port: 8140        # Порт PuppetServer
+openvox_gui_app_port: "4567"
+openvox_gui_app_host: "::"
+openvox_gui_uvicorn_workers: "2"
 
-openvox_gui_auth_backend: "local"  # Как аутентифицировать: local, ldap, none
-openvox_gui_ldap_server: ""        # LDAP сервер (заполнить если auth_backend=ldap)
-openvox_gui_ldap_base_dn: ""       # LDAP base DN (например: dc=example,dc=com)
+# Backend требует Python >= 3.10. На EL8/EL9 системный python3 старше
+# (3.6/3.9) — ставим python3.12 из AppStream явно (тот же паттерн, что
+# и в halif.vmware_exporter для pyVmomi).
+openvox_gui_python_bin: "{{ 'python3.12' if ansible_facts['os_family'] == 'RedHat' else 'python3' }}"
 
-openvox_gui_database_url: "sqlite:///opt/openvox-gui/data/openvox.db"
+# sqlite — официальный дефолт и единственный вариант, не требующий
+# внешней БД ("lab-only" по терминологии проекта, но для начала —
+# ровно то, что нужно). Переключение на postgresql потребует ещё и
+# openvox_gui_extra_conf с OPENVOX_GUI_DB_ADMIN_DSN/_APP_PASSWORD.
+openvox_gui_db_backend: "sqlite"
 
-openvox_gui_user: "puppet"                        # Юзер, от которого запускать сервис
-openvox_gui_group: "puppet"                       # Группа
-openvox_gui_home: "/opt/openvox-gui"              # Где установить
-openvox_gui_venv_path: "/opt/openvox-gui/venv"    # Где виртуальное окружение Python
-openvox_gui_data_dir: "/opt/openvox-gui/data"     # Где хранить данные
-openvox_gui_log_dir: "/var/log/openvox-gui"       # Где логи
+# ВАЖНО: эта роль НЕ устанавливает и не проверяет сам OpenVox/Puppet
+# Server — предполагается, что он либо уже есть, либо будет подключён
+# позже. Установщик деградирует аккуратно без него (CONFIGURE_ENC=auto
+# просто пропускает эту часть), поэтому роль применима и "заранее".
+# Пусто = установщик сам возьмёт $(hostname -f).
+openvox_gui_puppet_server_host: ""
 
-openvox_gui_ssl_cert_path: "/etc/ssl/certs/openvox-gui.crt"
-openvox_gui_ssl_key_path: "/etc/ssl/private/openvox-gui.key"
+openvox_gui_auth_backend: "local"
+openvox_gui_admin_username: "admin"
+# Пусто = пароль сгенерируется случайно самим установщиком и будет
+# сохранён в {{ openvox_gui_install_dir }}/config/.credentials.
+openvox_gui_admin_password: ""
 
-openvox_gui_python_version: "3.10"    # Какая версия Python нужна
-openvox_gui_debug: false              # Debug режим (ОПАСНО в production!)
-openvox_gui_workers: 4                # Сколько uvicorn воркеров запустить
+openvox_gui_service_user: "puppet"
+openvox_gui_service_group: "puppet"
+
+openvox_gui_configure_firewall: true
+openvox_gui_configure_selinux: false
+
+openvox_gui_build_frontend: true
+openvox_gui_install_nodejs: true
+
+
+openvox_gui_configure_pkg_repo: false
+openvox_gui_pkg_repo_dir: "/opt/openvox-pkgs"
+
+# Люк для любых опций из install.conf.example апстрима, которые мы не
+# завели отдельной переменной (SSL, прокси, кластерный режим и т.д.).
+# Ключи и значения дописываются в install.conf как есть.
+openvox_gui_extra_conf: {}

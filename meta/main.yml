@@ -1,24 +1,21 @@
 ---
 galaxy_info:
-  namespace: halif
-  name: openvox_gui
   role_name: openvox_gui
-  author: Halif
-  description: Ansible role for installing and configuring OpenVox GUI on Puppet infrastructure
-  license:
-    - Apache-2.0
-  min_ansible_version: "2.15"
+  namespace: halif
+  author: halif
+  description: Install OpenVox GUI, a web dashboard for OpenVox/Puppet infrastructure
+  license: MIT
+  min_ansible_version: "2.14"
 
   platforms:
     - name: Ubuntu
       versions:
-        - "20.04"
-        - "22.04"
-        - "24.04"
+        - jammy   # 22.04
+        - noble   # 24.04
     - name: Debian
+      # bullseye/11 not supported — ships Python 3.9, backend requires 3.10+
       versions:
-        - "11"
-        - "12"
+        - bookworm  # 12
     - name: EL
       versions:
         - "8"
@@ -27,12 +24,7 @@ galaxy_info:
   galaxy_tags:
     - puppet
     - openvox
-    - gui
-    - management
-    - infrastructure
-    - monitoring
     - dashboard
-    - orchestration
-    - devops
+    - monitoring
 
 dependencies: []
