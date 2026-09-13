@@ -48,7 +48,8 @@ openvox_gui_configure_selinux: false
 openvox_gui_build_frontend: true
 openvox_gui_install_nodejs: true
 
-
+# Пакетное зеркало OpenVox может скачивать много гигабайт — по
+# умолчанию выключено, включайте осознанно.
 openvox_gui_configure_pkg_repo: false
 openvox_gui_pkg_repo_dir: "/opt/openvox-pkgs"
 

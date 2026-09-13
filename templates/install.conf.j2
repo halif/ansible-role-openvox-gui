@@ -1,0 +1,33 @@
+# {{ ansible_managed }}
+INSTALL_DIR="{{ openvox_gui_install_dir }}"
+APP_PORT="{{ openvox_gui_app_port }}"
+APP_HOST="{{ openvox_gui_app_host }}"
+UVICORN_WORKERS="{{ openvox_gui_uvicorn_workers }}"
+APP_DEBUG="false"
+PYTHON_BIN="{{ openvox_gui_python_bin }}"
+
+{% if openvox_gui_puppet_server_host %}
+PUPPET_SERVER_HOST="{{ openvox_gui_puppet_server_host }}"
+{% endif %}
+
+OPENVOX_GUI_DB_BACKEND="{{ openvox_gui_db_backend }}"
+
+AUTH_BACKEND="{{ openvox_gui_auth_backend }}"
+ADMIN_USERNAME="{{ openvox_gui_admin_username }}"
+ADMIN_PASSWORD="{{ openvox_gui_admin_password }}"
+
+SERVICE_USER="{{ openvox_gui_service_user }}"
+SERVICE_GROUP="{{ openvox_gui_service_group }}"
+
+CONFIGURE_FIREWALL="{{ 'true' if openvox_gui_configure_firewall else 'false' }}"
+CONFIGURE_SELINUX="{{ 'true' if openvox_gui_configure_selinux else 'false' }}"
+
+BUILD_FRONTEND="{{ 'true' if openvox_gui_build_frontend else 'false' }}"
+INSTALL_NODEJS="{{ 'true' if openvox_gui_install_nodejs else 'false' }}"
+
+CONFIGURE_PKG_REPO="{{ 'true' if openvox_gui_configure_pkg_repo else 'false' }}"
+PKG_REPO_DIR="{{ openvox_gui_pkg_repo_dir }}"
+
+{% for key, value in openvox_gui_extra_conf.items() %}
+{{ key }}="{{ value }}"
+{% endfor %}

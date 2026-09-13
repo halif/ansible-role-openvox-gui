@@ -1,32 +1,16 @@
 ---
-- name: "OpenVox GUI | Display role info"
-  debug:
-    msg: |
-      Installing OpenVox GUI
-      Version: {{ openvox_gui_version }}
-      Host: {{ openvox_gui_host }}:{{ openvox_gui_port }}
-      User: {{ openvox_gui_user }}
-      Database: {{ openvox_gui_database_url }}
+- name: Include prerequisite packages
+  ansible.builtin.include_tasks: prereqs.yml
 
-- name: "Include system tasks"
-  include_tasks: system.yml
+# Апстрим явно разделяет "install.sh" (первая установка) и отдельные
+# update_local.sh/deploy.sh (обновления) — install.sh не предназначен
+# для повторного запуска. Проверяем факт "уже установлено" на уровне
+# всего install.yml, а не полагаемся только на creates: одного таска.
+- name: Check whether OpenVox GUI is already installed
+  ansible.builtin.stat:
+    path: "{{ openvox_gui_install_dir }}/VERSION"
+  register: openvox_gui_already_installed
 
-- name: "Include install tasks"
-  include_tasks: install.yml
-
-- name: "Include configure tasks"
-  include_tasks: configure.yml
-
-- name: "Include database tasks"
-  include_tasks: database.yml
-
-- name: "Include service tasks"
-  include_tasks: service.yml
-
-- name: "Display summary"
-  debug:
-    msg: |
-      ✓ OpenVox GUI installed successfully!
-      URL: https://{{ inventory_hostname }}:{{ openvox_gui_port }}
-      Default user: admin
-      Check credentials: cat {{ openvox_gui_home }}/config/.credentials
+- name: Include OpenVox GUI installation
+  ansible.builtin.include_tasks: install.yml
+  when: not openvox_gui_already_installed.stat.exists

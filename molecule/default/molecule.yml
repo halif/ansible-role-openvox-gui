@@ -1,22 +1,10 @@
 ---
-# Molecule конфигурация для тестирования роли
-
 driver:
-  name: docker  # Используем Docker для создания тестовых контейнеров
+  name: docker
 
 platforms:
-  # Тестируем на разных ОС
-  - name: ubuntu2204-openvox
+  - name: ubuntu2204-openvox-gui
     image: "geerlingguy/docker-ubuntu2204-ansible:latest"
-    override_command: false
-    command: "/sbin/init"  # Используй init вместо /bin/bash
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:rw  # Нужно для systemd в контейнере
-    cgroupns_mode: host
-    privileged: true  # Привилегированный контейнер (нужен для systemd)
-
-  - name: debian12-openvox
-    image: "geerlingguy/docker-debian12-ansible:latest"
     override_command: false
     command: "/sbin/init"
     volumes:
@@ -24,7 +12,7 @@ platforms:
     cgroupns_mode: host
     privileged: true
 
-  - name: rockylinux9-openvox
+  - name: rockylinux9-openvox-gui
     image: "geerlingguy/docker-rockylinux9-ansible:latest"
     override_command: false
     command: "/usr/sbin/init"
@@ -34,21 +22,20 @@ platforms:
     privileged: true
 
 provisioner:
-  name: ansible  # Используем Ansible для запуска роли
+  name: ansible
   inventory:
     group_vars:
       all:
-        ansible_user: "root"  # Запускаем от root в контейнере
+        ansible_user: "root"
 
 scenario:
   test_sequence:
-    # Порядок выполнения тестов
-    - destroy      # 1. Удали старые контейнеры
-    - create       # 2. Создай новые контейнеры
-    - converge     # 3. Запусти роль
-    - idempotence  # 4. Запусти роль ещё раз (не должно быть изменений!)
-    - verify       # 5. Проверь результат
-    - destroy      # 6. Удали контейнеры
+    - destroy
+    - create
+    - converge
+    - idempotence
+    - verify
+    - destroy
 
 verifier:
-  name: ansible  # Используем Ansible для проверки
+  name: ansible
