@@ -1,9 +1,10 @@
 ---
 # Backend требует Python >= 3.10 — на EL8/EL9 системный python3 младше,
 # ставим python3.12 из AppStream явно (см. комментарий в defaults).
-# curl нужен самому install.sh (используется внутри скрипта, строка
-# ~1014) — на минимальном Ubuntu-образе его не оказалось, добавляем
-# явно на оба семейства для единообразия.
+# curl нужен самому install.sh (используется внутри скрипта). На
+# минимальных EL9-образах уже стоит curl-minimal, который физически
+# конфликтует с полным curl (тот же случай, что и в halif.openlitespeed
+# на Rocky Linux) — allowerasing разрешает dnf заменить один на другой.
 - name: Install prerequisite packages (RHEL family)
   ansible.builtin.dnf:
     name:
@@ -13,6 +14,7 @@
       - python3.12-pip
       - python3.12-devel
     state: present
+    allowerasing: true
   when: ansible_facts['os_family'] == 'RedHat'
 
 - name: Install prerequisite packages (Debian family)
@@ -26,3 +28,70 @@
     state: present
     update_cache: true
   when: ansible_facts['os_family'] == 'Debian'
+
+# install.sh сам ставит Node.js, но жёстко зашит на NodeSource setup_18.x
+# (реальный баг апстрима) — а фронтенд (vite@7, react-router@8) требует
+# Node >= 20. Сам скрипт при этом сначала проверяет "уже есть node?" и
+# считает достаточным что угодно >= 18, пропуская свою установку —
+# поэтому просто ставим современный Node сами заранее, и install.sh
+# обнаружит его как уже подходящий, не трогая свою сломанную ветку.
+- name: Check whether a sufficiently new Node.js is already present
+  ansible.builtin.command: node -v
+  register: _node_version_check
+  changed_when: false
+  failed_when: false
+
+- name: Determine whether Node.js needs to be (re)installed
+  ansible.builtin.set_fact:
+    _node_needs_install: >-
+      {{ _node_version_check.rc != 0 or
+         (_node_version_check.stdout | regex_replace('^v', '') | regex_replace('\..*', '') | int) < 20 }}
+
+- name: Download NodeSource setup script (RHEL family)
+  ansible.builtin.get_url:
+    url: "https://rpm.nodesource.com/setup_20.x"
+    dest: /tmp/nodesource_setup.sh
+    mode: '0755'
+  when:
+    - ansible_facts['os_family'] == 'RedHat'
+    - _node_needs_install
+
+- name: Run NodeSource setup script (RHEL family)
+  ansible.builtin.command: /tmp/nodesource_setup.sh
+  when:
+    - ansible_facts['os_family'] == 'RedHat'
+    - _node_needs_install
+  changed_when: true
+
+- name: Install Node.js (RHEL family)
+  ansible.builtin.dnf:
+    name: nodejs
+    state: present
+  when:
+    - ansible_facts['os_family'] == 'RedHat'
+    - _node_needs_install
+
+- name: Download NodeSource setup script (Debian family)
+  ansible.builtin.get_url:
+    url: "https://deb.nodesource.com/setup_20.x"
+    dest: /tmp/nodesource_setup.sh
+    mode: '0755'
+  when:
+    - ansible_facts['os_family'] == 'Debian'
+    - _node_needs_install
+
+- name: Run NodeSource setup script (Debian family)
+  ansible.builtin.command: /tmp/nodesource_setup.sh
+  when:
+    - ansible_facts['os_family'] == 'Debian'
+    - _node_needs_install
+  changed_when: true
+
+- name: Install Node.js (Debian family)
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true
+  when:
+    - ansible_facts['os_family'] == 'Debian'
+    - _node_needs_install
