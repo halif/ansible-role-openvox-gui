@@ -1,10 +1,4 @@
 ---
-# Backend требует Python >= 3.10 — на EL8/EL9 системный python3 младше,
-# ставим python3.12 из AppStream явно (см. комментарий в defaults).
-# curl нужен самому install.sh (используется внутри скрипта). На
-# минимальных EL9-образах уже стоит curl-minimal, который физически
-# конфликтует с полным curl (тот же случай, что и в halif.openlitespeed
-# на Rocky Linux) — allowerasing разрешает dnf заменить один на другой.
 - name: Install prerequisite packages (RHEL family)
   ansible.builtin.dnf:
     name:
@@ -29,12 +23,6 @@
     update_cache: true
   when: ansible_facts['os_family'] == 'Debian'
 
-# install.sh сам ставит Node.js, но жёстко зашит на NodeSource setup_18.x
-# (реальный баг апстрима) — а фронтенд (vite@7, react-router@8) требует
-# Node >= 20. Сам скрипт при этом сначала проверяет "уже есть node?" и
-# считает достаточным что угодно >= 18, пропуская свою установку —
-# поэтому просто ставим современный Node сами заранее, и install.sh
-# обнаружит его как уже подходящий, не трогая свою сломанную ветку.
 - name: Check whether a sufficiently new Node.js is already present
   ansible.builtin.command: node -v
   register: _node_version_check

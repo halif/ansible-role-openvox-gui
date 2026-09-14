@@ -5,9 +5,6 @@
     dest: "{{ openvox_gui_source_dir }}"
     version: "{{ openvox_gui_version }}"
 
-# Файл ответов для install.sh -c install.conf -y — доверяем саму
-# установку (venv, сборку фронтенда, Alembic-миграции, systemd-юнит)
-# официальному скрипту апстрима, а не переписываем его логику здесь.
 - name: Render the installer answer file
   ansible.builtin.template:
     src: install.conf.j2

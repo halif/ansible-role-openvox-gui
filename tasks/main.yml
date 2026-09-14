@@ -2,10 +2,6 @@
 - name: Include prerequisite packages
   ansible.builtin.include_tasks: prereqs.yml
 
-# Апстрим явно разделяет "install.sh" (первая установка) и отдельные
-# update_local.sh/deploy.sh (обновления) — install.sh не предназначен
-# для повторного запуска. Проверяем факт "уже установлено" на уровне
-# всего install.yml, а не полагаемся только на creates: одного таска.
 - name: Check whether OpenVox GUI is already installed
   ansible.builtin.stat:
     path: "{{ openvox_gui_install_dir }}/VERSION"
