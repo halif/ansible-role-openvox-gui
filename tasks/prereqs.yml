@@ -1,10 +1,14 @@
 ---
 # Backend требует Python >= 3.10 — на EL8/EL9 системный python3 младше,
 # ставим python3.12 из AppStream явно (см. комментарий в defaults).
+# curl нужен самому install.sh (используется внутри скрипта, строка
+# ~1014) — на минимальном Ubuntu-образе его не оказалось, добавляем
+# явно на оба семейства для единообразия.
 - name: Install prerequisite packages (RHEL family)
   ansible.builtin.dnf:
     name:
       - git
+      - curl
       - python3.12
       - python3.12-pip
       - python3.12-devel
@@ -15,6 +19,7 @@
   ansible.builtin.apt:
     name:
       - git
+      - curl
       - python3
       - python3-venv
       - python3-pip

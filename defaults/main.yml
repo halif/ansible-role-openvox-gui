@@ -17,8 +17,10 @@ openvox_gui_uvicorn_workers: "2"
 
 # Backend требует Python >= 3.10. На EL8/EL9 системный python3 старше
 # (3.6/3.9) — ставим python3.12 из AppStream явно (тот же паттерн, что
-# и в halif.vmware_exporter для pyVmomi).
-openvox_gui_python_bin: "{{ 'python3.12' if ansible_facts['os_family'] == 'RedHat' else 'python3' }}"
+# и в halif.vmware_exporter для pyVmomi). Полный путь, а не голое имя
+# команды — так рекомендует сам install.sh в своих комментариях
+# (PYTHON_BIN=/usr/bin/python3.12), без двусмысленности в PATH.
+openvox_gui_python_bin: "{{ '/usr/bin/python3.12' if ansible_facts['os_family'] == 'RedHat' else '/usr/bin/python3' }}"
 
 # sqlite — официальный дефолт и единственный вариант, не требующий
 # внешней БД ("lab-only" по терминологии проекта, но для начала —
