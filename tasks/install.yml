@@ -5,21 +5,44 @@
     dest: "{{ openvox_gui_source_dir }}"
     version: "{{ openvox_gui_version }}"
 
+# Файл ответов для install.sh -c install.conf -y — доверяем саму
+# установку (venv, сборку фронтенда, Alembic-миграции, systemd-юнит)
+# официальному скрипту апстрима, а не переписываем его логику здесь.
 - name: Render the installer answer file
   ansible.builtin.template:
     src: install.conf.j2
     dest: "{{ openvox_gui_source_dir }}/install.conf"
     mode: '0600'
 
-- name: Run the OpenVox GUI installer (unattended)
-  ansible.builtin.command: ./install.sh -c install.conf -y
-  args:
-    chdir: "{{ openvox_gui_source_dir }}"
-    creates: "{{ openvox_gui_install_dir }}/VERSION"
-  register: _openvox_gui_install
-  environment:
-    HOME: /root
+# block/rescue: при падении команда останавливает плей ДО следующего
+# таска — а значит "Show installer output" ниже никогда бы не
+# выполнился, и мы теряли бы весь stdout именно тогда, когда он нужнее
+# всего. rescue гарантирует, что полный вывод будет показан в любом
+# случае, а плей всё равно корректно завершится с ошибкой.
+- name: Run the OpenVox GUI installer
+  block:
+    - name: Run the OpenVox GUI installer (unattended)
+      ansible.builtin.command: ./install.sh -c install.conf -y
+      args:
+        chdir: "{{ openvox_gui_source_dir }}"
+        creates: "{{ openvox_gui_install_dir }}/VERSION"
+      register: _openvox_gui_install
+      environment:
+        HOME: /root
 
-- name: Show installer output
-  ansible.builtin.debug:
-    var: _openvox_gui_install.stdout_lines
+    - name: Show installer output
+      ansible.builtin.debug:
+        var: _openvox_gui_install.stdout_lines
+
+  rescue:
+    - name: Show full installer stdout after failure
+      ansible.builtin.debug:
+        var: _openvox_gui_install.stdout_lines
+
+    - name: Show full installer stderr after failure
+      ansible.builtin.debug:
+        var: _openvox_gui_install.stderr_lines
+
+    - name: Re-fail the play after showing diagnostics
+      ansible.builtin.fail:
+        msg: "OpenVox GUI installer failed — see stdout/stderr above for the real reason."
